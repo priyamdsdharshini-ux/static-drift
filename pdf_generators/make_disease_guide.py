@@ -1,0 +1,226 @@
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import mm
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, PageBreak
+
+NAVY = colors.HexColor("#1F3A5F"); LIGHT = colors.HexColor("#EAF0F7"); RED = colors.HexColor("#9B1C1C")
+ss = getSampleStyleSheet()
+body = ParagraphStyle("b", parent=ss["Normal"], fontSize=9.5, leading=13)
+cell = ParagraphStyle("c", parent=body, fontSize=8.5, leading=11)
+cellh = ParagraphStyle("ch", parent=cell, textColor=colors.white, fontName="Helvetica-Bold")
+h1 = ParagraphStyle("h1", parent=ss["Title"], fontSize=20, textColor=NAVY, spaceAfter=2)
+h2 = ParagraphStyle("h2", parent=ss["Heading2"], fontSize=12, textColor=NAVY, spaceBefore=10, spaceAfter=4)
+ent = ParagraphStyle("e", parent=ss["Heading3"], fontSize=11.5, textColor=colors.white, leading=14)
+small = ParagraphStyle("s", parent=body, fontSize=8, textColor=colors.grey, leading=10)
+
+# name, category, what, symptoms, cause, prevention, care, doctor, specialist
+D = [
+("Type 2 diabetes", "Long-term condition",
+ "A condition where the body cannot use insulin well, so blood sugar stays high.",
+ "Increased thirst, frequent urination, tiredness, blurred vision, slow-healing wounds, frequent infections. Early on there may be no symptoms.",
+ "Linked to excess weight, inactivity, family history and age. It is not caught from other people.",
+ "Healthy weight, regular exercise, less sugary food and refined carbohydrates, no tobacco, regular check-ups if at risk.",
+ "Diagnosed by blood tests (fasting glucose, HbA1c). Management is diet, exercise, weight control and medicines or insulin decided by a doctor. Regular eye, kidney and foot checks are needed.",
+ "See a doctor for the symptoms above. Emergency: vomiting, confusion, fruity-smelling breath, drowsiness or very high sugar readings.",
+ "Endocrinology or diabetologist; start with a general physician."),
+("High blood pressure (hypertension)", "Long-term condition",
+ "Blood pressure that stays too high and strains the heart and blood vessels. It often has no symptoms.",
+ "Usually none. Very high pressure can cause severe headache, chest pain, blurred vision or breathlessness.",
+ "Too much salt, excess weight, inactivity, alcohol, stress, family history, age.",
+ "Less salt, healthy weight, regular exercise, limit alcohol, no tobacco, regular blood pressure checks.",
+ "Confirmed by repeated measurements. Lifestyle changes and medicines prescribed by a doctor. Do not stop medicines without medical advice.",
+ "See a doctor if readings are repeatedly 140/90 or higher. Emergency: very high pressure with chest pain, severe headache, vision change, weakness or confusion.",
+ "General physician or Cardiology."),
+("Asthma", "Long-term condition",
+ "A lung condition where the airways become inflamed and narrow, making breathing difficult.",
+ "Wheezing, cough (often at night or early morning), chest tightness, shortness of breath.",
+ "Triggers include dust, pollen, smoke, cold air, exercise, infections and strong smells. Often runs in families.",
+ "Avoid known triggers, avoid smoking and smoke, keep the home clean and dry, follow the doctor's asthma plan.",
+ "Doctor-prescribed reliever and controller inhalers and a written action plan. Carry the reliever inhaler.",
+ "See a doctor for repeated wheeze or night cough. Emergency: cannot speak full sentences, blue lips, or the reliever inhaler does not help.",
+ "Pulmonology or a general physician."),
+("Dengue", "Infection (mosquito-borne)",
+ "A viral infection spread by Aedes mosquitoes that bite mostly during the day.",
+ "Sudden high fever, severe headache, pain behind the eyes, muscle and joint pain, rash, nausea.",
+ "Spread by the bite of an infected mosquito, not directly from person to person. Common in rainy seasons.",
+ "Remove standing water, use repellent, wear long sleeves, use mosquito nets and screens.",
+ "Rest and plenty of fluids. Paracetamol can be used for fever. Do NOT take aspirin or ibuprofen because they can increase bleeding risk. A doctor may order blood tests to monitor platelets.",
+ "See a doctor early if you have fever in a dengue area. Emergency warning signs (often 3 to 7 days after fever starts): severe stomach pain, repeated vomiting, bleeding gums or nose, blood in vomit or stool, extreme weakness or restlessness.",
+ "General physician or Internal medicine; emergency care for warning signs."),
+("Malaria", "Infection (mosquito-borne)",
+ "A parasite infection spread by Anopheles mosquitoes, which bite mostly at night.",
+ "Fever with chills and heavy sweating that may come in cycles, headache, body aches, tiredness, nausea.",
+ "Spread by the bite of an infected mosquito. It does not spread by touch or coughing.",
+ "Sleep under treated mosquito nets, use repellent, remove stagnant water, take preventive medicine when advised for travel.",
+ "Needs a blood test for diagnosis. Treatment uses antimalarial medicines chosen by a doctor, and the full course must be completed.",
+ "See a doctor the same day for fever in a malaria area. Emergency: confusion, seizures, trouble breathing, very pale or yellow skin, or passing very little urine.",
+ "General physician or Internal medicine."),
+("Typhoid fever", "Infection (food and water)",
+ "A bacterial infection (Salmonella Typhi) spread through contaminated food and water.",
+ "Fever that rises over several days, weakness, stomach pain, headache, loss of appetite, constipation or diarrhea.",
+ "Eating or drinking food or water contaminated with infected faeces.",
+ "Drink safe boiled or treated water, wash hands with soap, eat well-cooked food, typhoid vaccination where advised.",
+ "Diagnosed with blood tests. Antibiotics are prescribed by a doctor. Rest and fluids at home.",
+ "See a doctor if fever lasts more than 3 days. Emergency: severe stomach pain, blood in stool, confusion or persistent vomiting.",
+ "General physician or Internal medicine."),
+("Tuberculosis (TB)", "Infection (airborne)",
+ "A bacterial infection that mainly affects the lungs and spreads through the air.",
+ "Cough lasting more than 2 to 3 weeks, coughing blood, fever, night sweats, weight loss, tiredness.",
+ "Spreads when a person with lung TB coughs or sneezes. Close contacts are at higher risk.",
+ "Complete treatment, cover the mouth when coughing, good ventilation, BCG vaccine in children, screen close contacts.",
+ "TB is curable. Treatment is a combination of medicines, usually for at least 6 months, and must never be stopped early. Free treatment is available through national TB programmes in many countries.",
+ "See a doctor for a cough lasting more than 2 weeks, especially with weight loss or night sweats. Emergency: coughing blood or severe breathlessness.",
+ "Pulmonology or Chest physician."),
+("Influenza (flu)", "Infection (airborne)",
+ "A viral infection of the nose, throat and lungs that spreads easily.",
+ "Sudden fever, body aches, tiredness, cough, sore throat, runny nose.",
+ "Spread through droplets when infected people cough or sneeze, and by touching contaminated surfaces.",
+ "Yearly flu vaccine, hand washing, cover coughs, stay home when sick.",
+ "Rest, fluids, and paracetamol for fever and aches. Most people recover in about a week.",
+ "See a doctor early if you are elderly, pregnant, have a long-term illness, or symptoms are severe. Emergency: trouble breathing, chest pain, confusion.",
+ "General physician."),
+("Pneumonia", "Infection (lungs)",
+ "An infection that inflames the air sacs in the lungs, caused by bacteria, viruses or other germs.",
+ "Cough with phlegm, fever, fast or difficult breathing, chest pain when breathing or coughing, tiredness.",
+ "Spreads like other chest infections through droplets. Risk is higher in babies, elderly people and smokers.",
+ "Vaccines (pneumococcal, flu), no smoking, hand washing, treat colds early.",
+ "Needs a doctor's assessment. Treatment depends on the cause and may include antibiotics prescribed by a doctor.",
+ "See a doctor the same day for cough with fever and fast breathing. Emergency: severe breathlessness, blue lips, confusion.",
+ "Pulmonology or General physician."),
+("Anemia (iron deficiency)", "Blood condition",
+ "A condition where the blood has too little hemoglobin to carry oxygen.",
+ "Tiredness, pale skin, dizziness, shortness of breath on effort, fast heartbeat, headache.",
+ "Low iron in the diet, blood loss (heavy periods, ulcers), pregnancy, low vitamin B12 or folate.",
+ "Eat iron-rich foods (leafy greens, lentils, beans, meat, eggs) with vitamin C foods, treat worms, follow pregnancy care advice.",
+ "Diagnosed with a blood test. Iron or vitamin supplements are best started after testing and with a doctor's advice. The cause of the anemia must be found.",
+ "See a doctor for ongoing tiredness or paleness. Emergency: fainting, chest pain, severe breathlessness.",
+ "General physician or Hematology."),
+("Urinary tract infection (UTI)", "Infection",
+ "An infection of the bladder or urinary tract, more common in women.",
+ "Burning when passing urine, frequent urge to urinate, lower belly pain, cloudy or strong-smelling urine.",
+ "Bacteria from the bowel reaching the urinary tract.",
+ "Drink plenty of water, do not hold urine, wipe front to back, pass urine after sex.",
+ "Needs a urine test. Antibiotics are prescribed by a doctor. Drink plenty of fluids.",
+ "See a doctor the same day. Urgent: fever, back or side pain, vomiting, blood in urine, or if pregnant.",
+ "General physician, Urology or Gynecology."),
+("Migraine", "Neurological condition",
+ "A recurring headache disorder, often one-sided and throbbing.",
+ "Throbbing headache, nausea, sensitivity to light and sound, sometimes visual changes (aura) beforehand.",
+ "Triggers include stress, missed meals, poor sleep, hormonal changes, certain foods, bright light.",
+ "Regular sleep and meals, manage stress, keep a trigger diary, stay hydrated.",
+ "Rest in a dark quiet room. Pain relievers from the medicine guide may help early. Frequent attacks need preventive treatment from a doctor.",
+ "See a doctor for frequent or worsening headaches. Emergency: sudden worst headache, weakness, speech trouble, stiff neck with fever.",
+ "Neurology."),
+("Hepatitis A (jaundice)", "Infection (food and water)",
+ "A viral liver infection spread through contaminated food and water. Usually recovers without lasting damage.",
+ "Yellow skin and eyes, dark urine, pale stools, tiredness, nausea, loss of appetite, stomach pain.",
+ "Eating food or drinking water contaminated with infected faeces.",
+ "Safe water, hand washing, good sanitation, hepatitis A vaccine.",
+ "Rest, fluids, light food. Avoid alcohol and ask a doctor before taking any medicines.",
+ "See a doctor for yellow eyes or skin. Emergency: confusion, drowsiness, persistent vomiting, bleeding.",
+ "Gastroenterology or Hepatology."),
+("Chickenpox", "Infection (airborne)",
+ "A viral infection that causes an itchy blistering rash. It spreads very easily.",
+ "Fever, tiredness, then itchy red spots that become fluid-filled blisters and crust over.",
+ "Spreads through the air and by touching blister fluid. Infectious until all blisters have crusted.",
+ "Chickenpox vaccine. Stay home until blisters have crusted.",
+ "Rest, fluids, calamine lotion, keep nails short. Paracetamol for fever. Do not give aspirin to children.",
+ "See a doctor if the person is pregnant, a newborn, has a weak immune system, blisters become red and infected, or the eye is involved.",
+ "General physician or Pediatrics."),
+("Gastroenteritis (stomach infection, food poisoning)", "Infection (food and water)",
+ "An infection of the stomach and intestines causing vomiting and diarrhea.",
+ "Watery diarrhea, vomiting, stomach cramps, fever, tiredness.",
+ "Contaminated food or water, or contact with an infected person.",
+ "Hand washing, safe food storage, cook food well, drink safe water.",
+ "Sip oral rehydration solution often, eat light food, rest.",
+ "See a doctor if it lasts more than 3 days, there is blood in stool, high fever, or signs of dehydration (very dry mouth, little urine, dizziness).",
+ "Gastroenterology or General physician."),
+("Hypothyroidism", "Hormone condition",
+ "A condition where the thyroid gland makes too little thyroid hormone.",
+ "Tiredness, weight gain, feeling cold, constipation, dry skin, hair thinning, low mood, slow heartbeat.",
+ "Often an autoimmune condition. Also caused by iodine problems or thyroid treatment.",
+ "Adequate iodine in diet. Regular thyroid tests if you have a family history.",
+ "Diagnosed by a blood test (TSH). Treatment is usually a daily thyroid hormone tablet prescribed by a doctor, often long term.",
+ "See a doctor for the symptoms above. Emergency: extreme drowsiness, very low body temperature or confusion.",
+ "Endocrinology."),
+("Depression", "Mental health condition",
+ "A medical condition causing persistent low mood and loss of interest. It is common and treatable.",
+ "Feeling sad or empty for 2 weeks or more, loss of interest, poor sleep or sleeping too much, appetite changes, tiredness, guilt, trouble concentrating.",
+ "Caused by a mix of biology, life events, stress and family history. It is not a weakness.",
+ "Stay connected with others, regular sleep and activity, early help for stress.",
+ "Talking therapy, medicines and lifestyle support, as decided with a doctor. Talk to a trusted person.",
+ "See a doctor if low mood lasts more than 2 weeks. If you have thoughts of harming yourself, seek emergency help or a crisis helpline immediately.",
+ "Psychiatry or Psychology."),
+("Osteoarthritis", "Joint condition",
+ "Wear of the joint cartilage that causes pain and stiffness, most often in knees, hips and hands.",
+ "Joint pain that worsens with use, stiffness after rest (usually under 30 minutes), swelling, reduced movement.",
+ "Age, joint injury, excess weight and family history.",
+ "Healthy weight, regular low-impact exercise, protect joints from injury.",
+ "Exercise and physiotherapy, weight loss, heat packs. Pain relievers from the medicine guide may help. A doctor can advise on other treatment.",
+ "See a doctor for persistent joint pain. Urgent: a hot, red, very swollen joint with fever.",
+ "Orthopedics or Rheumatology."),
+("Allergic rhinitis (hay fever)", "Allergy",
+ "An allergy of the nose caused by dust, pollen or other triggers.",
+ "Sneezing, runny or blocked nose, itchy eyes and throat, watery eyes.",
+ "The immune system reacts to dust mites, pollen, pets or mould.",
+ "Avoid triggers, keep windows closed in high pollen season, wash bedding often, saline nose rinse.",
+ "Saline rinse and antihistamines from the medicine guide. A doctor may prescribe a nasal spray.",
+ "See a doctor if symptoms last more than 7 days, affect sleep, or come with wheezing.",
+ "ENT specialist or Allergy specialist."),
+("Heart attack warning signs", "Emergency",
+ "A heart attack happens when blood flow to the heart is blocked. It is a medical emergency.",
+ "Chest pain, pressure or tightness, pain spreading to the arm, jaw or back, sweating, nausea, breathlessness, light-headedness.",
+ "Usually caused by blocked heart arteries. Risk rises with high blood pressure, diabetes, smoking, high cholesterol.",
+ "No smoking, healthy diet, exercise, control blood pressure, sugar and cholesterol.",
+ "Do not wait. Call emergency services immediately and sit down and rest. Do not drive yourself. Follow the instructions of the emergency operator.",
+ "EMERGENCY: call emergency services at once for any of these signs.",
+ "Cardiology (via emergency department)."),
+("Stroke warning signs", "Emergency",
+ "A stroke happens when blood flow to part of the brain is blocked or a vessel bleeds. It is a medical emergency.",
+ "Use FAST: Face drooping, Arm weakness, Speech difficulty, Time to call emergency services. Also sudden vision loss, confusion, severe headache, loss of balance.",
+ "Linked to high blood pressure, diabetes, smoking, heart rhythm problems and high cholesterol.",
+ "Control blood pressure, no smoking, exercise, healthy diet, take prescribed medicines.",
+ "Call emergency services immediately and note the time symptoms began. Do not give food, drink or medicines.",
+ "EMERGENCY: call emergency services at once for any of these signs.",
+ "Neurology (via emergency department)."),
+]
+
+def footer(c, d):
+    c.saveState(); c.setFont("Helvetica", 7.5); c.setFillColor(colors.grey)
+    c.drawString(18*mm, 10*mm, "General health education only. Not a diagnosis. Ask a doctor about your own health.")
+    c.drawRightString(A4[0]-18*mm, 10*mm, f"Page {d.page}"); c.restoreState()
+
+P = lambda t, st=body: Paragraph(t, st)
+s = [P("Common Diseases Explained", h1),
+     P("Plain-language reference for patients", ParagraphStyle("sub", parent=body, alignment=1, textColor=NAVY)),
+     Spacer(1, 8),
+     P("<b>Important:</b> This guide explains common conditions in simple words, compiled from standard public health guidance "
+       "(for example WHO, CDC, NHS and MedlinePlus). It does not diagnose and does not replace a doctor. "
+       "Treatment decisions, especially prescription medicines, must come from a qualified doctor. Review by a clinician is recommended before real use.", body),
+     P("Index", h2)]
+rows = [[P("Condition", cellh), P("Type", cellh), P("Who to see", cellh)]]
+for d in D: rows.append([P(f"<b>{d[0]}</b>", cell), P(d[1], cell), P(d[8], cell)])
+t = Table(rows, colWidths=[62*mm, 42*mm, 70*mm], repeatRows=1)
+t.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), NAVY), ("GRID", (0,0), (-1,-1), 0.4, colors.lightgrey),
+                       ("ROWBACKGROUNDS", (0,1), (-1,-1), [colors.white, LIGHT]), ("VALIGN", (0,0), (-1,-1), "TOP"),
+                       ("TOPPADDING", (0,0), (-1,-1), 3), ("BOTTOMPADDING", (0,0), (-1,-1), 3)]))
+s += [t, PageBreak()]
+
+for name, cat, what, sym, cause, prev, care, doc, spec in D:
+    emerg = cat == "Emergency"
+    head = Table([[P(f"{name}  ({cat})", ent)]], colWidths=[174*mm])
+    head.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,-1), RED if emerg else NAVY), ("LEFTPADDING", (0,0), (-1,-1), 8)]))
+    det = Table([[P("<b>What it is</b>", cell), P(f"{name}: {what}", cell)],
+                 [P("<b>Common symptoms</b>", cell), P(sym, cell)],
+                 [P("<b>Cause / spread</b>", cell), P(cause, cell)],
+                 [P("<b>Prevention</b>", cell), P(prev, cell)],
+                 [P("<b>General care</b>", cell), P(care, cell)],
+                 [P("<b>When to get help</b>", cell), P(doc, cell)],
+                 [P("<b>Who to see</b>", cell), P(spec, cell)]], colWidths=[32*mm, 142*mm])
+    det.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,-1), LIGHT), ("LINEBELOW", (0,0), (-1,-1), 0.4, colors.white),
+                             ("VALIGN", (0,0), (-1,-1), "TOP"), ("TOPPADDING", (0,0), (-1,-1), 3), ("BOTTOMPADDING", (0,0), (-1,-1), 3)]))
+    s += [KeepTogether([head, det, Spacer(1, 8)])]
+
+SimpleDocTemplate("../data/disease_reference_guide.pdf", pagesize=A4, leftMargin=18*mm, rightMargin=18*mm, topMargin=15*mm, bottomMargin=18*mm,
+                  title="Common Diseases Explained", author="Reference guide").build(s, onFirstPage=footer, onLaterPages=footer)
